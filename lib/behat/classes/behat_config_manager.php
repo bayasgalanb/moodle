@@ -387,7 +387,7 @@ class behat_config_manager {
                         'goutte' => null,
                         'selenium2' => $selenium2wdhost
                     ),
-                    'Moodle\BehatExtension\Extension' => array(
+                    'Moodle\BehatExtension' => array(
                         'steps_definitions' => $stepsdefinitions
                     )
                 )
