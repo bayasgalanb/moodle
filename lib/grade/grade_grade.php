@@ -340,15 +340,17 @@ class grade_grade extends grade_object {
     /**
      * Returns the minimum and maximum number of points this grade is graded with respect to.
      *
-     * @return array A list containing the minimum and maximum number of points
+     * @return array A list containing, in order, the minimum and maximum number of points.
      */
-    public function get_grade_min_max() {
+    protected function get_grade_min_and_max() {
+        global $CFG;
         $this->load_grade_item();
 
-        $usequirky = get_config('core', 'use_28_bug_grades_'.$this->grade_item->courseid);
+        // When the following setting is turned on we use the grade_grade raw min and max values.
+        $minmaxtouse = grade_get_setting($this->grade_item->courseid, 'minmaxtouse', $CFG->grade_minmaxtouse);
 
-        // Only aggregate items use seperate min grades.
-        if ($usequirky || $this->grade_item->is_aggregate_item()) {
+        // Only aggregate items use separate min grades.
+        if ($minmaxtouse == GRADE_MIN_MAX_FROM_GRADE_GRADE || $this->grade_item->is_aggregate_item()) {
             return array($this->rawgrademin, $this->rawgrademax);
         } else {
             return array($this->grade_item->grademin, $this->grade_item->grademax);
@@ -361,7 +363,7 @@ class grade_grade extends grade_object {
      * @return float The minimum number of points
      */
     public function get_grade_min() {
-        list($min, $max) = $this->get_grade_min_max();
+        list($min, $max) = $this->get_grade_min_and_max();
 
         return $min;
     }
@@ -372,7 +374,7 @@ class grade_grade extends grade_object {
      * @return float The maximum number of points
      */
     public function get_grade_max() {
-        list($min, $max) = $this->get_grade_min_max();
+        list($min, $max) = $this->get_grade_min_and_max();
 
         return $max;
     }

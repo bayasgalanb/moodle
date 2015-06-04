@@ -4380,20 +4380,26 @@ function xmldb_main_upgrade($oldversion) {
 
     if ($oldversion < 2015051100.04) {
         // We only need to do this for sites that have upgraded to 2.8.0 already.
-        if ($oldversion >= 2014111000.00) {
-
+        // Those sites will use the new behaviour of using the grade_grade min and max.
+        // As they might not expect this change, we flag the courses where this could
+        // be an issue to display a warning message on the reports.
+        if ($oldversion >= 2014111000.00 && empty($CFG->upgrade_minmaxwarningfixed)) {
             $sql = "SELECT DISTINCT(gi.courseid)
                       FROM {grade_items} gi
                       JOIN {grade_grades} gg
                         ON gg.itemid = gi.id
-                     WHERE (gi.itemtype <> 'course' AND gi.itemtype <> 'category')
+                     WHERE (gi.itemtype != ? AND gi.itemtype != ?)
                        AND (gg.rawgrademax != gi.grademax OR gg.rawgrademin != gi.grademin)";
 
-            $rs = $DB->get_recordset_sql($sql);
+            $rs = $DB->get_recordset_sql($sql, array('course', 'category'));
             foreach ($rs as $record) {
-                set_config('show_min_max_grades_changed_'.$record->courseid, 1);
+                set_config('show_min_max_grades_changed_' . $record->courseid, 1);
                 $DB->set_field('grade_items', 'needsupdate', 1, array('courseid' => $record->courseid));
             }
+            $rs->close();
+
+            // Flags this upgrade step as already run to prevent it from running multiple times.
+            set_config('upgrade_minmaxwarningfixed', 1);
         }
     }
 
