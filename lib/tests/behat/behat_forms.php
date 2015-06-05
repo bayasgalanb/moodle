@@ -62,6 +62,24 @@ class behat_forms extends behat_base {
     }
 
     /**
+     * Presses button with specified id|name|title|alt|value in the given container.
+     *
+     * @When /^I press "(?P<button_string>(?:[^"]|\\")*)" in the "(?P<element_string>[^"]*)" "(?P<selector_string>[^"]*)"$/
+     * @throws ElementNotFoundException Thrown by behat_base::find
+     * @param string $button button id|name|title|alt|value
+     * @param string $element element in which button has to be pressed.
+     * @param string $selector Element selector type.
+     */
+    public function press_button_in_the($button, $element, $selector) {
+        // Transforming to Behat selector/locator.
+        list($selector, $locator) = $this->transform_selector($selector, $element);
+        $selectcontainer = $this->find($selector, $locator);
+
+        // Press button if found.
+        $selectcontainer->getParent()->pressButton($button);
+    }
+
+    /**
      * Fills a form with field/value data. More info in http://docs.moodle.org/dev/Acceptance_testing#Providing_values_to_steps.
      *
      * @Given /^I set the following fields to these values:$/
@@ -394,7 +412,11 @@ class behat_forms extends behat_base {
         );
 
         if (!$this->running_javascript()) {
-            $actions[] = new Given('I press "' . get_string('go') . '"');
+            // Press button in the specified select container.
+            $containerxpath = "//div[contains(concat(' ', normalize-space(@class), ' '), ' singleselect ') and " .
+                ".//label[contains(normalize-space(string(.)), '" . $singleselect . "')]]";
+
+            $actions[] = new Given('I press "' . get_string('go') . '" in the "' . $containerxpath . '" "xpath_element"');
         }
 
         return $actions;
